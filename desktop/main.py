@@ -28,21 +28,33 @@ class KeypadManager:
             "off": 7
         }
 
-        def __init__(self, serial_connection, default_color_matrix=None, rainbow_mode=False):
+        def __init__(self, serial_connection, default_color_matrix=None, rainbow_mode=False, random_mode=False):
             self.serial_connection = serial_connection
             if default_color_matrix is None:
-                self.color_matrix = [[0, 1, 2, 3],
-                                     [4, 5, 6, 0],
-                                     [1, 2, 3, 4],
-                                     [5, 6, 0, 1]]
+                self.color_matrix = [0, 1, 2, 3,
+                                     4, 5, 6, 0,
+                                     1, 2, 3, 4,
+                                     5, 6, 0, 1]
             else:
                 self.color_matrix = default_color_matrix
             self.rainbow_mode = rainbow_mode
+            self.random_mode = random_mode
+            self.updated = False
 
         def step(self):
-            self.send_color_matrix()
+
+            if self.random_mode:
+                self.randomize_color_matrix()
+                self.updated = True
+
             if self.rainbow_mode:
                 self.rainbow_cycle()
+                self.updated = True
+
+            if self.updated:
+                self.send_color_matrix()
+                self.updated = False
+
             if DEBUG:
                 print("Color matrix: " + str(self.color_matrix))
 
@@ -52,10 +64,9 @@ class KeypadManager:
         def page_to_color_matrix(self, page):
             color_matrix = []
             for row in page:
-                color_matrix.append([])
-                for col in row:
-                    color_matrix[-1].append(self.color_dict[col[1]])
+                color_matrix.append(self.color_dict[row[1]])
             self.color_matrix = color_matrix
+            self.updated = True
 
         def get_color_matrix(self):
             return self.color_matrix
@@ -64,20 +75,20 @@ class KeypadManager:
             self.color_matrix = color_matrix
 
         def send_color_matrix(self):
-            for row in self.color_matrix:
-                for col in row:
-                    self.serial_connection.write(bytes(str(col), 'utf-8'))
-                    self.serial_connection.write(bytes(b" "))
+            for color in self.color_matrix:
+                self.serial_connection.write(bytes(str(color), 'utf-8'))
+                self.serial_connection.write(bytes(b" "))
             self.serial_connection.write(b'\r\n')
             self.serial_connection.flush()
 
         def rainbow_cycle(self):
-            for i in range(len(self.color_matrix)):
-                self.color_matrix[i] = list(map(self.iterate_color, self.color_matrix[i]))
+            self.color_matrix = list(map(self.iterate_color, self.color_matrix))
 
-        @staticmethod
-        def iterate_color(n):
-            return (n + 1) % 6
+        def randomize_color_matrix(self):
+            pass
+
+        def iterate_color(self, n):
+            return (n + 1) % len(self.color_dict)
 
     def __init__(self, config: str):
         self.config = json.load(open(config))
@@ -115,15 +126,16 @@ class KeypadManager:
             self.ser.flushOutput()
 
     def bot_play_sound(self, sound):
+        print("play: " + sound)
         r = requests.post(self.address, json={'username': self.username,
                                               'avatar_url': self.avatar_url,
                                               'content': "www.sodersjerna.com:" + self.username + ":play:" + sound})
         if DEBUG:
-            print(sound)
             print(r.status_code)
             print(r.text)
 
     def bot_command(self, command):
+        print("command: " + command)
         r = requests.post(self.address, json={'username': self.username,
                                               'avatar_url': self.avatar_url,
                                               'content': "www.sodersjerna.com:" + self.username + ":" + command})
@@ -134,41 +146,37 @@ class KeypadManager:
     def interpret_command(self, command: str):
         if command.startswith("%"):
             if command.endswith("pause"):
-                print("pause")
                 self.bot_command("pause")
 
             elif command.endswith("resume"):
-                print("resume")
                 self.bot_command("resume")
 
             elif command.endswith("stop"):
-                print("stop")
                 self.bot_command("stop")
 
             elif command.endswith("leave"):
-                print("leave")
                 self.bot_command("leave")
 
             elif command.endswith("reset"):
-                print("reset")
+                print("command: " + "reset")
                 self.cm.set_rainbow_mode(False)
                 self.cm.page_to_color_matrix(self.current_page)
 
             elif command.endswith("rainbowon"):
-                print("rainbowon")
+                print("command: " + "rainbowon")
                 self.cm.set_rainbow_mode(True)
 
             elif command.endswith("rainbowoff"):
-                print("rainbowoff")
+                print("command: " + "rainbowoff")
                 self.cm.set_rainbow_mode(False)
 
             else:
                 page_names = list(self.pages.keys())
-                print(page_names)
                 for name in page_names:
                     if command.endswith(name):
                         self.current_page = self.pages[name]
                         self.cm.page_to_color_matrix(self.current_page)
+                        print("page: " + name)
                         return
                 if DEBUG:
                     print("Unknown command: " + command)
@@ -177,37 +185,37 @@ class KeypadManager:
 
     def decode_button(self, buttons):
         if buttons & 1:
-            self.interpret_command(self.current_page[0][0][0])
+            self.interpret_command(self.current_page[0][0])
         if buttons & 2:
-            self.interpret_command(self.current_page[0][1][0])
+            self.interpret_command(self.current_page[1][0])
         if buttons & 4:
-            self.interpret_command(self.current_page[0][2][0])
+            self.interpret_command(self.current_page[2][0])
         if buttons & 8:
-            self.interpret_command(self.current_page[0][3][0])
+            self.interpret_command(self.current_page[3][0])
         if buttons & 16:
-            self.interpret_command(self.current_page[1][0][0])
+            self.interpret_command(self.current_page[4][0])
         if buttons & 32:
-            self.interpret_command(self.current_page[1][1][0])
+            self.interpret_command(self.current_page[5][0])
         if buttons & 64:
-            self.interpret_command(self.current_page[1][2][0])
+            self.interpret_command(self.current_page[6][0])
         if buttons & 128:
-            self.interpret_command(self.current_page[1][3][0])
+            self.interpret_command(self.current_page[7][0])
         if buttons & 256:
-            self.interpret_command(self.current_page[2][0][0])
+            self.interpret_command(self.current_page[8][0])
         if buttons & 512:
-            self.interpret_command(self.current_page[2][1][0])
+            self.interpret_command(self.current_page[9][0])
         if buttons & 1024:
-            self.interpret_command(self.current_page[2][2][0])
+            self.interpret_command(self.current_page[10][0])
         if buttons & 2048:
-            self.interpret_command(self.current_page[2][3][0])
+            self.interpret_command(self.current_page[11][0])
         if buttons & 4096:
-            self.interpret_command(self.current_page[3][0][0])
+            self.interpret_command(self.current_page[12][0])
         if buttons & 8192:
-            self.interpret_command(self.current_page[3][1][0])
+            self.interpret_command(self.current_page[13][0])
         if buttons & 16384:
-            self.interpret_command(self.current_page[3][2][0])
+            self.interpret_command(self.current_page[14][0])
         if buttons & 32768:
-            self.interpret_command(self.current_page[3][3][0])
+            self.interpret_command(self.current_page[15][0])
 
 
 if __name__ == "__main__":
