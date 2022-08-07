@@ -1,0 +1,88 @@
+{
+  "username": "plop91",
+  "avatar_url": "",
+  "address": "ADDRESS",
+  "com": "COM9",
+  "baudrate": 9600,
+  "timeout": 1,
+  "parity": "PARITY_NONE",
+  "rtscts": 0,
+  "pages": {
+    "home": [
+      [
+        ["random", "cyan"],
+        ["2stars", "magenta"],
+        ["2chainz", "cyan"],
+        ["5stars", "magenta"]
+      ],
+      [
+        ["1star", "magenta"],
+        ["2stars", "cyan"],
+        ["2chainz", "magenta"],
+        ["5stars", "cyan"]
+      ],
+      [
+        ["peepeepoopooman", "cyan"],
+        ["%reset", "yellow"],
+        ["%rainbowon", "white"],
+        ["%rainbowoff", "off"]
+      ],
+      [
+        ["%page1", "blue"],
+        ["%home", "green"],
+        ["%stop", "red"],
+        ["%page2", "blue"]
+      ]
+    ],"page1": [
+      [
+        ["peepeepoopooman", "cyan"],
+        ["voodoo", "cyan"],
+        ["snake", "cyan"],
+        ["kanye", "cyan"]
+      ],
+      [
+        ["1star", "cyan"],
+        ["2stars", "cyan"],
+        ["2chainz", "cyan"],
+        ["5stars", "cyan"]
+      ],
+      [
+        ["1star", "cyan"],
+        ["2stars", "cyan"],
+        ["2chainz", "cyan"],
+        ["5stars", "cyan"]
+      ],
+      [
+        ["%page1", "blue"],
+        ["%home", "green"],
+        ["%stop", "red"],
+        ["%page2", "blue"]
+      ]
+    ],"page2": [
+      [
+        ["peepeepoopooman", "yellow"],
+        ["voodoo", "yellow"],
+        ["snake", "yellow"],
+        ["kanye", "yellow"]
+      ],
+      [
+        ["1star", "yellow"],
+        ["2stars", "yellow"],
+        ["2chainz", "yellow"],
+        ["5stars", "yellow"]
+      ],
+      [
+        ["1star", "yellow"],
+        ["2stars", "yellow"],
+        ["2chainz", "yellow"],
+        ["5stars", "yellow"]
+      ],
+      [
+        ["%page1", "blue"],
+        ["%home", "green"],
+        ["%stop", "red"],
+        ["%page2", "blue"]
+      ]
+    ]
+  }
+}
